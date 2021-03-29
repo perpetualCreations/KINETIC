@@ -1,0 +1,34 @@
+Module Semantics:
+
+class Agent
+-> has class variables, like ID, connection and activity status
+-> has basic functions, like shutdown, update, restart, and OS-level actions
+
+class Components
+-> container parent class for all component types
+subclass kinetics
+subclass sensors
+subclass interfaces
+subclass power
+
+class Exceptions
+-> container parent class for all exceptions
+
+Module is used for creating derived agent classes, like so:
+
+class Raspbot(kinetic.Agent):
+    def __init__(self):
+        super.__init__()
+        # init logic
+
+    class MotorLeft(kinetic.Components.Kinetics.Motor):
+        def __init__(self):
+            super.__init__()
+            # more init logic
+
+    class MotorRight(kinetic.Components.Kinetics.Motor):
+        def __init__(self):
+            super.__init__()
+            # more init logic
+
+    # etc...
