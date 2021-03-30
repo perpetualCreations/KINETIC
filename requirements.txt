@@ -5,3 +5,4 @@ opencv-contrib-python
 imutils
 sense-hat
 gpiozero
+numpy

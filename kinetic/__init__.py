@@ -20,6 +20,7 @@ from sys import exit
 from subprocess import call
 import cv2
 from imutils.video import VideoStream
+from time import sleep
 
 class Exceptions:
     """
@@ -275,13 +276,45 @@ class Components:
                     print("CV IMENCODE RESULT: ", result)
                     raise Exceptions.ComponentError("Camera stream failed to capture image.") from ParentException
 
-            def broadcast_stream(self) -> None:
+            @staticmethod
+            def encode_as_bytes_stream(image: object) -> bytes:
                 """
-                TODO
+                Takes OpenCV image and converts to bytes.
 
+                To reverse conversion:
+                decoded_image = cv2.imdecode(numpy.frombuffer(RECEIVED_BYTESTRING_HERE, numpy.uint8), cv2.IMREAD_COLOR)
+
+                :param image: object, cv2 image array
+                :return: bytes, image encoded as bytes
+                """
+                return cv2.imencode(".jpg", image)[1].tobytes()
+
+            def broadcast_stream(self, host: str, port: int, key: Union[str, bytes, None], key_is_path: bool = False, restart_delay: Union[int, None] = 1) -> None:
+                """
+                Creates swbs.Client instance, with host, port, and key parameters pointing to a swbs.Host or swbs.Server instance, or other compatible swbs.Instance derivative.
+                Is a blocking function.
+
+                See USBCamera.encode_as_bytes_stream docstring for how to decode received bytestrings.
+
+                If self.stream is None, returns None before execution starts.
+                If Exceptions.ComponentError is raised when collecting VideoStream image, restarts camera and then waits 1 second, unless specified otherwise, before resuming.
+
+                :param host: str, hostname of host to connect to
+                :param port: int, port that host is listening on
+                :param key: Union[str, bytes, None], AES encryption key, if None, AES is disabled
+                :param key_is_path: bool, if True key parameter is treated as path to file containing encryption key, default False
+                :param restart_delay: Union[int, None], delay in seconds after a video stream restart due to an exception being raised, if None delay is disabled, default 1
                 :return: None
                 """
-                raise NotImplementedError # NOTICE FOR FUTURE ME!!! DON'T USE IMAGEZMQ FOR CAMERA, CONVERT IMAGES TO BASE64, TRANSMIT AS BYTES
+                if self.stream is None: return None
+                streamer = swbs.Client(host, port, key, key_is_path)
+                streamer.connect()
+                while True:
+                    try: streamer.send(Components.Sensors.USBCamera.encode_as_bytes_stream(Components.Sensors.USBCamera.collect_stream(self)))
+                    except Exceptions.ComponentError:
+                        Components.Sensors.USBCamera.stop_stream(self)
+                        Components.Sensors.USBCamera.start_stream(self)
+                        if restart_delay is not None: sleep(restart_delay)
 
         class SenseHAT:
             """
