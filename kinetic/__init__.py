@@ -33,6 +33,10 @@ class Exceptions:
         """
         Exception raised by a Component class instance.
         """
+    class AgentError(BaseException):
+        """
+        Exception raised by a Agent class instance.
+        """
 
 class Controllers:
     """
@@ -169,11 +173,42 @@ class Components:
                     if self.control == 0:
                         self.controller.send(self.keymap["BRAKE"])
                         return None
-                    if self.is_pwm_enabled is True: self.controller.send(self.keymap["SPEED"] + " " + str(255 * self.control))
+                    if self.is_pwm_enabled is True: self.controller.send(self.keymap["SPEED"] + " " + str(255 * abs(self.control)))
                     if self.is_direction_enabled is False: self.controller.send(self.keymap["FORWARDS"])
                     else:
                         if self.control > 0: self.controller.send(self.keymap["FORWARDS"])
                         elif self.control < 0: self.controller.send(self.keymap["BACKWARDS"])
+
+            def forward(self, speed: int = 1) -> None:
+                """
+                Wrapper for Motor.set_control to move forward.
+                Safe to use regardless if direction is disabled.
+
+                :param speed: int, absolute, 0 < x =< 1 indicating motor speed, return None if 0, x > 1 will result in x becoming 1,
+                    if PWM is disabled speed is safely ignored, default 1
+                :return: None
+                """
+                Components.Kinetics.Motor.set_control(self, abs(speed))
+
+            def backward(self, speed: int = 1) -> None:
+                """
+                Wrapper for Motor.set_control to move backward.
+                Safe to use regardless if direction is disabled, however if direction is disabled, is effectively the same as calling Motor.forward.
+
+                :param speed: int, absolute, 0 < x =< 1 indicating motor speed, return None if 0, x > 1 will result in x becoming 1,
+                    if PWM is disabled speed is safely ignored, default 1
+                :return: None
+                """
+                Components.Kinetics.Motor.set_control(self, abs(speed) * -1)
+
+            def stop(self) -> None:
+                """
+                Wrapper for Motor.set_control to stop.
+                Safe to use regardless if direction or PWM is disabled.
+
+                :return: None
+                """
+                Components.Kinetics.Motor.set_control(self, 0)
 
     class Sensors:
         """
@@ -429,6 +464,70 @@ class ActionGroups:
     """
     Various abstractions for common actions that may involve controlling multiple components.
     """
+    class DualMotor:
+        """
+        Abstraction for tank-style dual motor drive setup.
+        """
+        def __init__(self, motor_left: Components.Kinetics.Motor, motor_right: Components.Kinetics.Motor):
+            """
+            Class initialization, creating class variables.
+            Takes two Components.Kinetics.Motor instances.
+
+            :ivar self.motor_left: Components.Kinetics.Motor, dump of parameter motor_left
+            :ivar self.motor_right: Components.Kinetics.Motor, dump of parameter motor_right
+            :param motor_left: Components.Kinetics.Motor, left motor
+            :param motor_right: Components.Kinetics.Motor, right motor
+            """
+            self.motor_left = motor_left
+            self.motor_right = motor_right
+
+        def forward(self, speed: int = 1) -> None:
+            """
+            Wrapper for bi-motor control to move forward.
+            Safe to use regardless if direction is disabled.
+
+            :param speed: int, absolute, 0 < x =< 1 indicating motor speed, return None if 0, x > 1 will result in x becoming 1,
+                if PWM is disabled speed is safely ignored
+            :return: None
+            """
+            self.motor_left.forward(speed)
+            self.motor_right.forward(speed)
+
+        def backward(self, speed: int = 1) -> None:
+            """
+            Wrapper for bi-motor control to move backward.
+            Safe to use regardless if direction is disabled, however if direction is disabled, is effectively the same as calling DualMotor.forward.
+
+            :param speed: int, absolute, 0 < x =< 1 indicating motor speed, return None if 0, x > 1 will result in x becoming 1,
+                if PWM is disabled speed is safely ignored
+            :return: None
+            """
+            self.motor_left.backward(speed)
+            self.motor_right.backward(speed)
+
+        def clockwise(self, speed: int = 1) -> None:
+            """
+            Wrapper for bi-motor control to spin clockwise, effectively turning right.
+            Requires at least direction control, otherwise is effectively the same as calling DualMotor.forward.
+
+            :param speed: int, absolute, 0 < x =< 1 indicating motor speed, return None if 0, x > 1 will result in x becoming 1,
+                if PWM is disabled speed is safely ignored
+            :return: None
+            """
+            self.motor_left.forward(speed)
+            self.motor_right.backward(speed)
+
+        def counterclockwise(self, speed: int = 1) -> None:
+            """
+            Wrapper for bi-motor control to spin counterclockwise, effectively turning left.
+            Requires at least direction control, otherwise is effectively the same as calling DualMotor.forward.
+
+            :param speed: int, absolute, 0 < x =< 1 indicating motor speed, return None if 0, x > 1 will result in x becoming 1,
+                if PWM is disabled speed is safely ignored
+            :return: None
+            """
+            self.motor_left.backward(speed)
+            self.motor_right.forward(speed)
 
 class Agent:
     """
@@ -438,10 +537,13 @@ class Agent:
         """
         Class initialization, creating class variables.
 
-        :ivar self.id: str, Agent UUID
+        :ivar self.id: str, Agent UUID, default UUID 6ae2f3bd-2b55-468a-88a3-af0eeae03896
+        :ivar self.network: object, swbs instance, initially None overwritten by Agent.network_init
+        :ivar self.lookup: dict, keys being commands that translate to function calls, defaulted to if Agent.client_listen parameter lookup is None, can be directly overwritten, default None until overwritten
         """
         self.id = "6ae2f3bd-2b55-468a-88a3-af0eeae03896"
-        self.network = None # swbs instance placeholder, overwritten by Agent.network_init
+        self.network = None
+        self.lookup = None
 
     def network_init(self, host:str = "arbiter.local", port:int = 999, key: Union[str, bytes, None] = None, key_is_path: bool = False) -> None:
         """
@@ -475,6 +577,38 @@ class Agent:
                     self.network.connect()
                     return None
                 else: self.network.restart()
+
+    def client_listen(self, lookup: Union[dict, None] = None, no_encrypt: bool = False) -> None:
+        """
+        Blocking function that listens for controller input over self.network, looks up input as key with lookup dictionary, executing associated function with input command.
+        If command exists, replies with "OK" and if command does not exist in dictionary lookup, replies with "KEYERROR".
+
+        If dictionary key "HELP" does not exist in lookup, command is set to sends all valid commands as individual TXs, initiated with the length of the command list (counting from 1).
+        For the controller to receive the command list, it should first receive the "OK" acknowledgement, and then the second TX containing length, and start a for loop lasting the length of command list.
+
+        If self.network is not swbs.Client, raises Exceptions.AgentError.
+
+        :param lookup: Union[dict, None], dictionary containing commands and associated function calls to be executed with command (i.e {"DO THIS":lambda: somewhere.something.do()}),
+            if None defaults to self.lookup, if all is None, raise Exceptions.AgentError, default None
+        :param no_encrypt: bool, passed to network I/O functions send()/receive(), if True disables AES for network I/O operations in this function, otherwise if False AES encryption is enabled, default False
+        :return: None
+        """
+        if isinstance(self.network, swbs.Client) is not True: raise Exceptions.AgentError("Instance is not in client state.")
+        if lookup is None:
+            if self.lookup is None: raise Exceptions.AgentError("No valid command lookup dictionary was found, both self.lookup and input parameter were None.")
+            else: lookup = self.lookup
+        if isinstance(lookup, dict) is not True: raise Exceptions.AgentError("Lookup dictionary is not a dict type.")
+        while True:
+            controller_input = self.network.receive(no_decrypt = no_encrypt)
+            if controller_input in list(lookup.keys()):
+                self.network.send("OK", no_encrypt = no_encrypt)
+                lookup[controller_input]()
+            else:
+                if controller_input == "HELP":
+                    self.network.send("OK", no_encrypt = no_encrypt)
+                    self.network.send(str(len(list(lookup.keys()))))
+                    for x in list(lookup.keys()): self.network.send(x, no_encrypt = no_encrypt)
+                else: self.network.send("KEYERROR", no_encrypt = no_encrypt)
 
     def stop(self, status: int, extended_callbacks = None) -> None:
         """
