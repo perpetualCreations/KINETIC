@@ -260,17 +260,21 @@ class Components:
                 self.stream.stop()
                 self.stream = None
 
-            def collect_stream(self) -> Union[object, None]:
+            def collect_stream(self, debug: bool = False) -> Union[object, None]:
                 """
                 Reads self.stream VideoStream, uses cv2.IMWRITE_JPEG_QUALITY for compression
                 Returns None if video stream has not been started and is still None.
 
+                :param debug: bool, if True show collected image with cv2.imshow, default False
                 :return: Union[object, None], cv2 JPEG encoded image
                 """
                 if self.stream is None: return None
                 result = None # placeholder for encoding result
                 try:
                     result, image = cv2.imencode(".jpg", self.stream.read(), [int(cv2.IMWRITE_JPEG_QUALITY), self.quality])
+                    if debug is True:
+                        cv2.imshow("KINETIC COLLECT_STREAM DEBUG", self.stream.read())
+                        cv2.waitKey(1)
                     return image
                 except cv2.error as ParentException:
                     print("CV IMENCODE RESULT: ", result)
@@ -287,14 +291,16 @@ class Components:
                 :param image: object, cv2 image array
                 :return: bytes, image encoded as bytes
                 """
-                return cv2.imencode(".jpg", image)[1].tobytes()
+                return image.tobytes()
 
-            def broadcast_stream(self, host: str, port: int, key: Union[str, bytes, None], key_is_path: bool = False, restart_delay: Union[int, None] = 1) -> None:
+            def broadcast_stream(self, host: str, port: int, key: Union[str, bytes, None], key_is_path: bool = False, restart_delay: Union[int, None] = 1, debug: bool = False) -> None:
                 """
                 Creates swbs.Client instance, with host, port, and key parameters pointing to a swbs.Host or swbs.Server instance, or other compatible swbs.Instance derivative.
                 Is a blocking function.
 
                 See USBCamera.encode_as_bytes_stream docstring for how to decode received bytestrings.
+                When using SWBS to receive bytes from TX, set parameter return_bytes to True.
+                The image is further encoded as a JPEG, decode again to use, with objects.cv2.imdecode(DECODED_IMAGE_HERE, 1).
 
                 If self.stream is None, returns None before execution starts.
                 If Exceptions.ComponentError is raised when collecting VideoStream image, restarts camera and then waits 1 second, unless specified otherwise, before resuming.
@@ -304,13 +310,17 @@ class Components:
                 :param key: Union[str, bytes, None], AES encryption key, if None, AES is disabled
                 :param key_is_path: bool, if True key parameter is treated as path to file containing encryption key, default False
                 :param restart_delay: Union[int, None], delay in seconds after a video stream restart due to an exception being raised, if None delay is disabled, default 1
+                :param debug: bool, print MD5 hash of image frame to stdout if True, also show raw image with cv2.imshow, default False
                 :return: None
                 """
                 if self.stream is None: return None
                 streamer = swbs.Client(host, port, key, key_is_path)
                 streamer.connect()
                 while True:
-                    try: streamer.send(Components.Sensors.USBCamera.encode_as_bytes_stream(Components.Sensors.USBCamera.collect_stream(self)))
+                    try:
+                        frame = Components.Sensors.USBCamera.encode_as_bytes_stream(Components.Sensors.USBCamera.collect_stream(self, debug))
+                        if debug is True: print(swbs.MD5.new(frame).hexdigest()) # yes, this fetches the MD5 class from swbs, imported from Pycryptodomex, no I feel no shame
+                        streamer.send(frame)
                     except Exceptions.ComponentError:
                         Components.Sensors.USBCamera.stop_stream(self)
                         Components.Sensors.USBCamera.start_stream(self)
