@@ -13,7 +13,6 @@ Made by perpetualCreations
 import swbs
 import socket
 import serial
-from uuid import uuid4
 from Cryptodome.Hash import SHA3_512
 from typing import Union
 from sys import exit
@@ -46,6 +45,9 @@ class Controllers:
     class Serial:
         """
         Abstraction class for a serial interface controller.
+
+        Designed specifically for Arduino or other language-compatible microcontrollers as serial endpoints.
+        See kinetic.generate for producing endpoint C code.
         """
         def __init__(self, port: str = "/dev/ttyACM0", timeout: int = 5):
             """
@@ -57,12 +59,12 @@ class Controllers:
                 including raw I/O without wrapper, do not operate while self.serial_lock is True, set self.serial_lock to True
                 for the duration of raw I/O and back to False upon completing the operation
             :ivar self.serial_lock: bool, lock boolean, to prevent multiple multiple calls to serial, a primitive version of a thread resource lock
+            :ivar self.serial_lock_relay: bool, allows for function calls to send/receive while self.serial_lock is True, intended for chain calls, do not assign directly
             """
             self.serial_instance = serial.Serial(timeout = timeout)
             self.serial_instance.port = port
             self.serial_lock = False  # bool, if True new serial operations cannot be made until changed back to False
                                       # prevents more than one serial operation being done simultaneously
-
             try:
                 try: self.serial_instance.open()
                 except serial.serialposix.SerialException as ParentException: raise Exceptions.ControllerError("Failed to initialize serial controller.") from ParentException
@@ -70,40 +72,78 @@ class Controllers:
                 try: self.serial_instance.open()
                 except serial.serialwin32.SerialException as ParentException: raise Exceptions.ControllerError("Failed to initialize serial controller.") from ParentException
 
-        def send(self, message: Union[str, bytes]) -> None:
+        def send(self, message: Union[str, bytes], chain_call: Union[str, None] = None, chain_call_parameters: Union[tuple, dict, None] = None, in_recursion: bool = False) -> None:
             """
             Sends bytes through serial.
 
             :param message: Union[str, bytes], data to be sent
+            :param chain_call: Union[str, None], string specifying whether to "SEND" or "RECEIVE", None to disable, ignored if chain_call_parameters is empty, default None
+            :param chain_call_parameters: Union[tuple, dict, None], parameters for send or receive function call, ignored if chain_call is empty, default None
+            :param in_recursion: bool, if True function call ignores self.serial_lock, should not be True unless triggered by chain call, default False
             :return: None
             """
             if isinstance(message, str): message = message.encode("ascii", "replace")
-            while self.serial_lock is True: pass
+            if in_recursion is not True:
+                while self.serial_lock is True: pass
             try:
                 self.serial_lock = True
                 for x in range(0, len(message)): self.serial_instance.write(message[x])
                 self.serial_instance.write(b"\x0A")
+                if chain_call is not None and chain_call_parameters is not None:
+                    LOOKUP = {"SEND":Controllers.Serial.send, "RECEIVE":Controllers.Serial.receive}
+                    if isinstance(chain_call_parameters, list):
+                        if chain_call_parameters[3] is not True:
+                            chain_call_parameters = list(chain_call_parameters) # minor tuple mutability hack
+                            chain_call_parameters[3] = True
+                            chain_call_parameters = tuple(chain_call_parameters)
+                        return LOOKUP[chain_call.upper()](*chain_call_parameters)
+                    else:
+                        if chain_call_parameters["in_recursion"] is not True: chain_call_parameters["in_recursion"] = True
+                        return LOOKUP[chain_call.upper()](**chain_call_parameters)
                 self.serial_lock = False
                 return None
             except objects.serial.serialposix.SerialException as ParentException:
                 self.serial_lock = False
                 raise Exceptions.ControllerError("Serial controller failed to send bytes.") from ParentException
+            except KeyError as ParentException:
+                self.serial_lock = False
+                raise Exceptions.ControllerError("Invalid chain call.") from ParentException
 
-        def receive(self) -> str:
+        def receive(self, chain_call: Union[str, None] = None, chain_call_parameters: Union[tuple, dict, None] = None, in_recursion: bool = False) -> str:
             """
             Receives bytes through serial.
 
+            :param chain_call: Union[str, None], string specifying whether to "SEND" or "RECEIVE", None to disable, ignored if chain_call_parameters is empty, default None
+            :param chain_call_parameters: Union[tuple, dict, None], parameters for send or receive function call, ignored if chain_call is empty, default None
+            :param in_recursion: bool, if True function call ignores self.serial_lock, should not be True unless triggered by chain call, default False
             :return: str, decoded byte string
             """
-            while self.serial_lock is True: pass
+            if in_recursion is not True:
+                while self.serial_lock is True: pass
             try:
                 self.serial_lock = True
                 response = self.serial_instance.read_until(b"\x0A").rstrip(b"\n").decode("utf-8", "replace")
+                if chain_call is not None and chain_call_parameters is not None:
+                    LOOKUP = {"SEND":Controllers.Serial.send, "RECEIVE":Controllers.Serial.receive}
+                    if isinstance(chain_call_parameters, list):
+                        if chain_call_parameters[3] is not True:
+                            chain_call_parameters = list(chain_call_parameters) # minor tuple mutability hack
+                            chain_call_parameters[3] = True
+                            chain_call_parameters = tuple(chain_call_parameters)
+                        LOOKUP[chain_call.upper()](*chain_call_parameters)
+                        return response
+                    else:
+                        if chain_call_parameters["in_recursion"] is not True: chain_call_parameters["in_recursion"] = True
+                        LOOKUP[chain_call.upper()](**chain_call_parameters)
+                        return response
                 self.serial_lock = False
                 return response
             except objects.serial.serialposix.SerialException as ParentException:
                 self.serial_lock = False
                 raise Exceptions.ControllerError("Serial controller failed to receive bytes.") from ParentException
+            except KeyError as ParentException:
+                self.serial_lock = False
+                raise Exceptions.ControllerError("Invalid chain call.") from ParentException
 
     class SenseHAT:
         """
@@ -124,10 +164,37 @@ class Controllers:
             self.sense = SenseHat()
             self.sense.set_imu_config(True, True, True)
 
+    class Generic:
+        """
+        Perfectly Generic Object, colored a perfectly generic green.
+
+        Generic controller class, with no special attributes. Exists as a placeholder.
+        """
+
 class Components:
     """
     Parent class of hardware abstraction types.
     """
+    class Generic:
+        """
+        Perfectly Generic Object, colored a perfectly generic green.
+
+        Generic component class, with no special attributes. Exists as a placeholder.
+
+        When creating a component class that does not have an existing subclass to derive from in Components, use this class for kinetic.generate to properly recognize the class as a component for serial endpoint generation.
+        """
+        def __init__(self, controller: object, keymap: dict):
+            """
+            Class initialization, creating class variables.
+
+            :ivar self.keymap: dict, dump of parameter keymap
+            :ivar self.controller: object, controller instance
+            :param controller: class instance of Controllers, controller to use for interfacing with component
+            :param keymap: dict, should contain keys for their respective serial commands
+            """
+            self.controller = controller
+            self.keymap = keymap
+
     class Kinetics:
         """
         Moving parts on your agent.
@@ -174,7 +241,7 @@ class Components:
                     if self.control == 0:
                         self.controller.send(self.keymap["BRAKE"])
                         return None
-                    if self.is_pwm_enabled is True: self.controller.send(self.keymap["SPEED"] + " " + str(255 * abs(self.control)))
+                    if self.is_pwm_enabled is True: self.controller.send(self.keymap["SPEED"], "SEND", (str(round(255 * abs(self.control))),))
                     if self.is_direction_enabled is False: self.controller.send(self.keymap["FORWARDS"])
                     else:
                         if self.control > 0: self.controller.send(self.keymap["FORWARDS"])
@@ -325,6 +392,39 @@ class Components:
                         Components.Sensors.USBCamera.stop_stream(self)
                         Components.Sensors.USBCamera.start_stream(self)
                         if restart_delay is not None: sleep(restart_delay)
+
+        class VL53L0X:
+            """
+            VL53L0X time-of-flight distance sensor.
+
+            For future release iteration: adjustable measurement time budget, and other API inclusions.
+            """
+            def __init__(self, controller: object, keymap: dict):
+                """
+                Class initialization, creating class variables.
+                Supports Controllers.Serial instance(s) as a controller.
+
+                :ivar self.keymap: dict, dump of parameter keymap
+                :ivar self.controller: object, controller instance
+                :param controller: class instance of Controllers, controller to use for interfacing with component
+                :param keymap: dict, should contain key COLLECT for their respective serial commands
+                """
+                self.keymap = keymap
+                if isinstance(controller, Controllers.Serial) is True: self.controller = controller
+                else: raise Exceptions.ComponentError("Unsupported controller.")
+
+            def collect(self, round_to: Union[int, None]) -> Union[int, float, None]:
+                """
+                Collect distance data from sensor.
+
+                :param round_to: Union[int, None], decimal to round to, None to return raw, default None
+                :return: Union[int, float, None], distance in millimeters, None if int conversion failed
+                """
+                self.controller.send(self.keymap["COLLECT"])
+                try: result = int(self.controller.receive())
+                except ValueError: return None
+                if round_to is not None: round(result, round_to)
+                return result
 
         class SenseHAT:
             """
@@ -576,15 +676,19 @@ class Agent:
     """
     Agent class for deriving from, for custom robotic agents.
     """
-    def __init__(self):
+    def __init__(self, uuid: str = "6ae2f3bd-2b55-468a-88a3-af0eeae03896", uuid_is_path: bool = False):
         """
         Class initialization, creating class variables.
 
-        :ivar self.id: str, Agent UUID, default UUID 6ae2f3bd-2b55-468a-88a3-af0eeae03896
+        :param uuid: str, Agent UUID, default UUID 6ae2f3bd-2b55-468a-88a3-af0eeae03896
+        :param uuid_is_path: bool, if True treats parameter uuid as path to file containing uuid, default False
+        :ivar self.uuid: str, dump of parameter uuid or uuid collected from path to file
         :ivar self.network: object, swbs instance, initially None overwritten by Agent.network_init
         :ivar self.lookup: dict, keys being commands that translate to function calls, defaulted to if Agent.client_listen parameter lookup is None, can be directly overwritten, default None until overwritten
         """
-        self.id = "6ae2f3bd-2b55-468a-88a3-af0eeae03896"
+        if uuid_is_path is True:
+            with open(uuid) as uuid_handle: self.uuid = uuid_handle.read()
+        else: self.uuid = uuid
         self.network = None
         self.lookup = None
 
