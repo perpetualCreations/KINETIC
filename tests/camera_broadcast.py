@@ -1,3 +1,17 @@
+"""
+██╗  ██╗██╗███╗   ██╗███████╗████████╗██╗ ██████╗
+██║ ██╔╝██║████╗  ██║██╔════╝╚══██╔══╝██║██╔════╝
+█████╔╝ ██║██╔██╗ ██║█████╗     ██║   ██║██║
+██╔═██╗ ██║██║╚██╗██║██╔══╝     ██║   ██║██║
+██║  ██╗██║██║ ╚████║███████╗   ██║   ██║╚██████╗
+╚═╝  ╚═╝╚═╝╚═╝  ╚═══╝╚══════╝   ╚═╝   ╚═╝ ╚═════╝
+
+Project KINETIC
+Made by perpetualCreations
+
+kinetic.Components.Sensors.USBCamera unit test, camera streamer.
+"""
+
 import kinetic
 
 class Test(kinetic.Components.Sensors.USBCamera):

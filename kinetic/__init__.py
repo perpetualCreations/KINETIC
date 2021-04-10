@@ -20,6 +20,7 @@ from subprocess import call
 import cv2
 from imutils.video import VideoStream
 from time import sleep
+from json import load
 
 class Exceptions:
     """
@@ -42,6 +43,16 @@ class Controllers:
     """
     Parent class of controller abstractions for controlling components.
     """
+    @staticmethod
+    def load_keymap(path: str) -> dict:
+        """
+        Load JSON keymap file with supplied path.
+
+        :param path: str, path to JSON keymap file
+        :return: dict, keymap as dictionary
+        """
+        with open(path) as map_handler: return load(map_handler)
+
     class Serial:
         """
         Abstraction class for a serial interface controller.
@@ -216,7 +227,7 @@ class Components:
                 :ivar self.keymap: dict, dump of parameter keymap
                 :ivar self.controller: object, controller instance
                 :param controller: class instance of Controllers, controller to use for interfacing with component
-                :param keymap: dict, should contain keys FORWARDS, BACKWARDS, SPEED, BRAKE, for their respective serial commands
+                :param keymap: dict, should contain keys FORWARDS, BACKWARDS, SPEED, BRAKE, RELEASE, for their respective serial commands
                 :param enable_pwm: bool, whether Motor instance supports PWM speed control, default True
                 :param enable_direction: bool, whether Motor instance supports direction control, default True
                 """
@@ -246,6 +257,7 @@ class Components:
                     else:
                         if self.control > 0: self.controller.send(self.keymap["FORWARDS"])
                         elif self.control < 0: self.controller.send(self.keymap["BACKWARDS"])
+                    self.controller.send(self.keymap["RELEASE"])
 
             def forward(self, speed: int = 1) -> None:
                 """
@@ -684,13 +696,15 @@ class Agent:
         :param uuid_is_path: bool, if True treats parameter uuid as path to file containing uuid, default False
         :ivar self.uuid: str, dump of parameter uuid or uuid collected from path to file
         :ivar self.network: object, swbs instance, initially None overwritten by Agent.network_init
-        :ivar self.lookup: dict, keys being commands that translate to function calls, defaulted to if Agent.client_listen parameter lookup is None, can be directly overwritten, default None until overwritten
+        :ivar self.lookup: dict, keys being commands that translate to function calls, defaulted to if Agent.client_listen parameter lookup is None,
+            can be directly overwritten, see unionize parameter for Agent.client_listen to use both self.lookup and parameter lookup,
+            default lookup dictionary is {"STOP":Agent.stop(self, 0), "UPDATE":Agent.update(), "SHUTDOWN":Agent.shutdown(self), "REBOOT":Agent.shutdown(self)}
         """
         if uuid_is_path is True:
             with open(uuid) as uuid_handle: self.uuid = uuid_handle.read()
         else: self.uuid = uuid
         self.network = None
-        self.lookup = None
+        self.lookup = {"STOP":Agent.stop(self, 0), "UPDATE":Agent.update(), "SHUTDOWN":Agent.shutdown(self), "REBOOT":Agent.shutdown(self)}
 
     def network_init(self, host:str = "arbiter.local", port:int = 999, key: Union[str, bytes, None] = None, key_is_path: bool = False) -> None:
         """
@@ -725,7 +739,7 @@ class Agent:
                     return None
                 else: self.network.restart()
 
-    def client_listen(self, lookup: Union[dict, None] = None, no_encrypt: bool = False) -> None:
+    def client_listen(self, lookup: Union[dict, None] = None, no_encrypt: bool = False, unionize: bool = False) -> None:
         """
         Blocking function that listens for controller input over self.network, looks up input as key with lookup dictionary, executing associated function with input command.
         If command exists, replies with "OK" and if command does not exist in dictionary lookup, replies with "KEYERROR".
@@ -738,12 +752,13 @@ class Agent:
         :param lookup: Union[dict, None], dictionary containing commands and associated function calls to be executed with command (i.e {"DO THIS":lambda: somewhere.something.do()}),
             if None defaults to self.lookup, if all is None, raise Exceptions.AgentError, default None
         :param no_encrypt: bool, passed to network I/O functions send()/receive(), if True disables AES for network I/O operations in this function, otherwise if False AES encryption is enabled, default False
+        :param unionize: bool, merge self.lookup and parameter lookup for usage as command dictionary if True, default False
         :return: None
         """
         if isinstance(self.network, swbs.Client) is not True: raise Exceptions.AgentError("Instance is not in client state.")
-        if lookup is None:
-            if self.lookup is None: raise Exceptions.AgentError("No valid command lookup dictionary was found, both self.lookup and input parameter were None.")
-            else: lookup = self.lookup
+        if lookup is None: lookup = self.lookup
+        else:
+            if isinstance(self.lookup, dict) is True and unionize is True: lookup.update(self.lookup)
         if isinstance(lookup, dict) is not True: raise Exceptions.AgentError("Lookup dictionary is not a dict type.")
         while True:
             controller_input = self.network.receive(no_decrypt = no_encrypt)

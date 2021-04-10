@@ -10,14 +10,6 @@ Project KINETIC
 Made by perpetualCreations
 
 generate.py module, generates serial endpoints from given components.
-
-*Do you feel nostalgic, looking at something not riddled with class structures and decorators?*
-*Do you remember how we all started, at the root of this world?*
-*The days where we used global statements in place of instance variables.*
-*It is only right for us to finish what you began.*
-*The cursor is awaiting your next input.*
-*Press any key to continue. I am waiting.*
-*-X*
 """
 
 # Imports
@@ -29,10 +21,10 @@ import kinetic
 import argparse
 import inspect
 import configparser
-from os.path import split, splitext
+from os.path import split, splitext, join
 from sys import path
 from importlib import import_module
-from random import randint
+from json import dump
 
 # Argument Configuration
 argument_parser = argparse.ArgumentParser()
@@ -116,7 +108,7 @@ for switch in mono_type_component_filter(kinetic.Components.Power.Switch):
     pin_index["DIGITAL"] += 1
 
 # Write Script from Preliminary Details
-with open("serial_endpoint_" + str(randint(1, 9999)) + ".cpp", "w") as script_export:
+with open(join(configuration_parser["path"]["output_path"], "kinetic_serial_endpoint.cpp"), "w") as script_export:
     script = """// KINETIC Serial Endpoint Code Generation
 // Auto-Generated
 
@@ -250,6 +242,11 @@ void loop() {
         script +=   "\n                distance_dump(" + vl53l0x_sensor["ORIGIN"].__name__ + ");"
         script +=   "\n            }"
 
+    for generic in mono_type_component_filter(kinetic.Components.Generic):
+        script += '''\n            if (strcmp(accumulator, "''' + "REPLACE_ME_GENERIC_COMMAND " + generic["ORIGIN"].__name__ + '''") == 0) {'''
+        script +=   "\n                // insert command logic here"
+        script +=   "\n            }"
+
     script += """
 
             memset(accumulator, 0, sizeof(accumulator)); // clears array.
@@ -264,6 +261,25 @@ void loop() {
 }
     """
     script_export.write(script)
+    for motor in motors:
+        with open(join(configuration_parser["path"]["output_path"], "motor_" + motor["ORIGIN"].__name__ + "_keymap.json"), "w") as json_dump_handle:
+            dump({"FORWARDS": "MOTOR_FORWARD " + motor["ORIGIN"].__name__,
+                  "BACKWARDS": "MOTOR_BACKWARD " + motor["ORIGIN"].__name__,
+                  "SPEED": "MOTOR_SPEED" + motor["ORIGIN"].__name__,
+                  "BRAKE": "MOTOR_BRAKE_HOLD " + motor["ORIGIN"].__name__,
+                  "RELEASE": "MOTOR_BRAKE_RELEASE " + motor["ORIGIN"].__name__
+                  }, json_dump_handle)
+    for vl53l0x_sensor in mono_type_component_filter(kinetic.Components.Sensors.VL53L0X):
+        with open(join(configuration_parser["path"]["output_path"], "vl53l0x_" + vl53l0x_sensor["ORIGIN"].__name__ + "_keymap.json"), "w") as json_dump_handle:
+            dump({"COLLECT": "VL53L0X_COLLECT " + vl53l0x["ORIGIN"].__name__,}, json_dump_handle)
+    for voltage_sensor in voltage_sensors:
+        with open(join(configuration_parser["path"]["output_path"], "voltage_sensor_" + voltage_sensor["ORIGIN"].__name__ + "_keymap.json"), "w") as json_dump_handle:
+            dump({"COLLECT": "VOLTAGE_SENSOR_COLLECT " + voltage_sensor["ORIGIN"].__name__,}, json_dump_handle)
+    for switch in switches:
+        with open(join(configuration_parser["path"]["output_path"], "switch_" + switch["ORIGIN"].__name__ + "_keymap.json"), "w") as json_dump_handle:
+            dump({"OPEN": "SWITCH_OPEN " + switch["ORIGIN"].__name__,
+                  "CLOSE": "SWITCH_CLOSE " + switch["ORIGIN"].__name__,
+                  }, json_dump_handle)
 pass
 
 print("Done, task completed in ", time() - init_time, " seconds.")

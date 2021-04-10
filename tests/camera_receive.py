@@ -1,7 +1,20 @@
+"""
+██╗  ██╗██╗███╗   ██╗███████╗████████╗██╗ ██████╗
+██║ ██╔╝██║████╗  ██║██╔════╝╚══██╔══╝██║██╔════╝
+█████╔╝ ██║██╔██╗ ██║█████╗     ██║   ██║██║
+██╔═██╗ ██║██║╚██╗██║██╔══╝     ██║   ██║██║
+██║  ██╗██║██║ ╚████║███████╗   ██║   ██║╚██████╗
+╚═╝  ╚═╝╚═╝╚═╝  ╚═══╝╚══════╝   ╚═╝   ╚═╝ ╚═════╝
+
+Project KINETIC
+Made by perpetualCreations
+
+kinetic.Components.Sensors.USBCamera unit test, camera stream endpoint.
+"""
+
 import swbs
 import cv2
 import numpy
-from Cryptodome.Hash import MD5
 
 if __name__ == '__main__':
     host = swbs.Host(999, None)
