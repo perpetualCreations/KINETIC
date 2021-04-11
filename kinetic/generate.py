@@ -80,30 +80,16 @@ def mono_type_component_filter(component_type: object) -> list:
         if items["COMPONENT"] == component_type: result.append(items)
     return result
 
-# Define IVAR Retrieval Function
-
-def ivar_get(class_object, ivar_name: str) -> object:
-    """
-    Gets the value of an instance variable from a class.
-
-    :param class_object: class, class object to retrieve instance variable from
-    :param ivar_name: str, name of instance variable
-    :return: object, value of instance variable
-    """
-    instance = class_object()
-    return getattr(instance, ivar_name)
-
 # Pin Assignment
 motors = []         # thanks to Python scope referencing, edits made to elements in the list returned by the filter function are not applied to the main component list.
 voltage_sensors = [] # solution? more lists.
 switches = []         # these get appended to with the new dictionary entries containing pin assignments
 for motor in mono_type_component_filter(kinetic.Components.Kinetics.Motor):
-    print(dir(motor["ORIGIN"]))
-    if ivar_get(motor["ORIGIN"], "is_pwm_enabled") is True:
+    if motor["ORIGIN"].pwm is True:
         motor.update({"PWM":pwm_pin_reference[pin_index["PWM"]]})
         pin_index["PWM"] += 1
     else: motor.update({"PWM":None})
-    if ivar_get(motor["ORIGIN"], "is_direction_enabled") is True:
+    if motor["ORIGIN"].direction is True:
         motor.update({"DIR":normal_digital_pin_reference[pin_index["DIGITAL"]]})
         pin_index["DIGITAL"] += 1
     else: motor.update({"DIR":None})

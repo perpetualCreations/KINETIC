@@ -41,15 +41,23 @@ class TestBot(kinetic.Agent):
         """
         Left-side motor.
         """
+        pwm = True
+        direction = True
         def __init__(self, outer_self: object):
             super().__init__(outer_self.serial, kinetic.Controllers.load_keymap("F://KINETIC//tests//motor_MotorLeft_keymap.json"))
+            TestBot.MotorLeft.pwm = self.is_pwm_enabled
+            TestBot.MotorLeft.direction = self.is_direction_enabled
 
     class MotorRight(kinetic.Components.Kinetics.Motor):
         """
         Right-side motor.
         """
+        pwm = True
+        direction = True
         def __init__(self, outer_self: object):
             super().__init__(outer_self.serial, kinetic.Controllers.load_keymap("F://KINETIC//tests//motor_MotorRight_keymap.json"))
+            TestBot.MotorLeft.pwm = self.is_pwm_enabled
+            TestBot.MotorLeft.direction = self.is_direction_enabled
 
     class MotorBind(kinetic.ActionGroups.DualMotor):
         """
