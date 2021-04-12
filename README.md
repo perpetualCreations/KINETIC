@@ -3,16 +3,18 @@
 
 Control modular and configurable robotic agents over the network. 
 
-[comment]: # (## Documentation)
-[comment]: # (To see documentation regarding installation and usage, please visit <LINK HERE>.)
+## Documentation
+To see documentation regarding installation and usage, please visit [https://dreamerslegacy.xyz/projects/kinetic/docs/index.html](https://dreamerslegacy.xyz/projects/kinetic/docs/index.html).
 
 ## Releases & Dist.
 With the released wheel file, after downloading:
 ```commandline
-pip3 install /path/to/wheel/file/here/project-kinetic-1.0-py3-none-any.whl
+pip3 install /path/to/wheel/file/here/project_kinetic-1.0-py3-none-any.whl
 ```
 ...Or available on PyPI through:
 ```commandline
 pip3 install project-kinetic
 ```
 Please see documentation for more information.
+
+

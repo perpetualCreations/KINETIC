@@ -110,10 +110,7 @@ with open(join(configuration_parser["path"]["output_path"], "kinetic_serial_endp
 // Auto-Generated
 
 // See documentation on pinouts and additional information.
-"""
 
-    if input("Using the stock Arduino IDE to upload? [y/n]: ").lower() is "n":
-        script += """
 #include <Arduino.h>
 """
 
@@ -240,9 +237,10 @@ void loop() {
         script +=   "\n            }"
 
     for generic in mono_type_component_filter(kinetic.Components.Generic):
-        script += '''\n            if (strcmp(accumulator, "''' + "REPLACE_ME_GENERIC_COMMAND " + generic["ORIGIN"].__name__ + '''") == 0) {'''
-        script +=   "\n                // insert command logic here"
-        script +=   "\n            }"
+        if generic.generate_ignore is False:
+            script += '''\n            if (strcmp(accumulator, "''' + "REPLACE_ME_GENERIC_COMMAND " + generic["ORIGIN"].__name__ + '''") == 0) {'''
+            script +=   "\n                // insert command logic here"
+            script +=   "\n            }"
 
     script += """
 
