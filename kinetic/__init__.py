@@ -10,14 +10,15 @@ Project KINETIC
 Made by perpetualCreations
 """
 
+from numpy import ndarray
 import swbs
 import socket
 import serial
-from Cryptodome.Hash import SHA3_512
 from typing import Union
 from sys import exit
 from subprocess import call
 import cv2
+from gpiozero import CPUTemperature
 from imutils.video import VideoStream
 from time import sleep
 from json import load
@@ -113,7 +114,7 @@ class Controllers:
                         return LOOKUP[chain_call.upper()](**chain_call_parameters)
                 self.serial_lock = False
                 return None
-            except objects.serial.serialposix.SerialException as ParentException:
+            except serial.serialposix.SerialException as ParentException:
                 self.serial_lock = False
                 raise Exceptions.ControllerError("Serial controller failed to send bytes.") from ParentException
             except KeyError as ParentException:
@@ -149,7 +150,7 @@ class Controllers:
                         return response
                 self.serial_lock = False
                 return response
-            except objects.serial.serialposix.SerialException as ParentException:
+            except serial.serialposix.SerialException as ParentException:
                 self.serial_lock = False
                 raise Exceptions.ControllerError("Serial controller failed to receive bytes.") from ParentException
             except KeyError as ParentException:
@@ -360,14 +361,14 @@ class Components:
                     raise Exceptions.ComponentError("Camera stream failed to capture image.") from ParentException
 
             @staticmethod
-            def encode_as_bytes_stream(image: object) -> bytes:
+            def encode_as_bytes_stream(image: Union[ndarray, object]) -> bytes:
                 """
                 Takes OpenCV image and converts to bytes.
 
                 To reverse conversion:
                 decoded_image = cv2.imdecode(numpy.frombuffer(RECEIVED_BYTESTRING_HERE, numpy.uint8), cv2.IMREAD_COLOR)
 
-                :param image: object, cv2 image array
+                :param image: Union[numpy.ndarray, object], cv2 image array
                 :return: bytes, image encoded as bytes
                 """
                 return image.tobytes()
@@ -728,6 +729,7 @@ class Agent:
             self.network = swbs.Host(port, key, key_is_path = key_is_path)
             while True:
                 self.network.listen()
+                self.network.send("KINETIC WAITING FOR CONTROLLER")
                 signal = self.network.receive()
                 controller = None # placeholder for scope
                 if signal == "CONTROLLER": controller = self.network.client_address[0]

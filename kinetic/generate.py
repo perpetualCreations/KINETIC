@@ -36,6 +36,7 @@ configuration_parser.read(args.configpath)
 
 # Initial Preparation of End-User Agent Module
 sys.path.append(split(configuration_parser["path"]["script_path"])[0])
+target = None # placeholder, so PyCharm knows this exists, overwritten by exec import below
 exec("from " + splitext(split(configuration_parser["path"]["script_path"])[1])[0] + " import " + configuration_parser["class"]["agent_class"] + " as target")
 
 # Defining Script Variables
@@ -56,6 +57,7 @@ pin_index = {"PWM":0, "DIGITAL":0, "ANALOG":0} # integer variables that progress
 generic_index = 0
 
 # Component Collection of End-User Agent Module
+# target is imported on line 39 with exec()
 for head in inspect.getmembers(target):
     for neck in head:
         try:
@@ -266,7 +268,7 @@ void loop() {
                   }, json_dump_handle)
     for vl53l0x_sensor in mono_type_component_filter(kinetic.Components.Sensors.VL53L0X):
         with open(join(configuration_parser["path"]["output_path"], "vl53l0x_" + vl53l0x_sensor["ORIGIN"].__name__ + "_keymap.json"), "w") as json_dump_handle:
-            dump({"COLLECT": "VL53L0X_COLLECT " + vl53l0x["ORIGIN"].__name__,}, json_dump_handle)
+            dump({"COLLECT": "VL53L0X_COLLECT " + vl53l0x_sensor["ORIGIN"].__name__,}, json_dump_handle)
     for voltage_sensor in voltage_sensors:
         with open(join(configuration_parser["path"]["output_path"], "voltage_sensor_" + voltage_sensor["ORIGIN"].__name__ + "_keymap.json"), "w") as json_dump_handle:
             dump({"COLLECT": "VOLTAGE_SENSOR_COLLECT " + voltage_sensor["ORIGIN"].__name__,}, json_dump_handle)

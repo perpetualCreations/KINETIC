@@ -44,7 +44,7 @@ The usage of bases is modular, allowing for the creation of custom agents.
        Test Bot: Generic as ever, comes in green and emerald colors.
        """
        def __init__(self, uuid, uuid_is_path):
-           super(TestBot, self).__init__(uuid, uuid_is_path) # initialize kinetic.Agent base class
+           super().__init__(uuid, uuid_is_path) # initialize kinetic.Agent base class
            self.serial = kinetic.Controllers.Serial() # initialize serial controller
            self.motor_left = TestBot.MotorLeft(self) # initialize motor classes
            self.motor_right = TestBot.MotorRight(self)

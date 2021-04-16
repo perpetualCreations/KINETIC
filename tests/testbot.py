@@ -19,7 +19,7 @@ class TestBot(kinetic.Agent):
     Test Bot: Generic as ever, comes in green and emerald colors.
     """
     def __init__(self, uuid, uuid_is_path):
-        super(TestBot, self).__init__(uuid, uuid_is_path)
+        super().__init__(uuid, uuid_is_path)
         self.serial = kinetic.Controllers.Serial()
         self.motor_left = TestBot.MotorLeft(self)
         self.motor_right = TestBot.MotorRight(self)
