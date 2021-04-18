@@ -14,11 +14,12 @@ Setup script for generating package.
 
 import setuptools
 
-with open("README.md", "r") as fh: long_description = fh.read()
+with open("README.md", "r") as fh:
+    long_description = fh.read()
 
 setuptools.setup(
     name="project-kinetic",
-    version="1.0.1",
+    version="1.0.2",
     author="perpetualCreations",
     author_email="tchen0584@gmail.com",
     description="Control modular and configurable robotic agents over the network.",
