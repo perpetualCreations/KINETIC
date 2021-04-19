@@ -37,68 +37,75 @@ The usage of bases is modular, allowing for the creation of custom agents.
 
 .. code-block:: python
 
-   import kinetic
+    import kinetic
 
-   class TestBot(kinetic.Agent): # main agent class
-       """
-       Test Bot: Generic as ever, comes in green and emerald colors.
-       """
-       def __init__(self, uuid, uuid_is_path):
-           super().__init__(uuid, uuid_is_path) # initialize kinetic.Agent base class
-           self.serial = kinetic.Controllers.Serial() # initialize serial controller
-           self.motor_left = TestBot.MotorLeft(self) # initialize motor classes
-           self.motor_right = TestBot.MotorRight(self)
-           self.motor_bind = TestBot.MotorBind(self) # initialize dual motor actiongroup class
-           self.speed = 255 # speed that is fed into FORWARD, BACKWARD, CLOCKWISE, COUNTERCLOCKWISE commands
-           TestBot.network_init(self) # initialize self.network and seek connection
-           TestBot.client_listen(self, {"SETSPEED":TestBot.set_speed(self, int(self.network.receive())),
-                                        "FORWARD":self.motor_bind.forward(self.speed),
-                                        "BACKWARD":self.motor_bind.backward(self.speed),
-                                        "CLOCKWISE":self.motor_bind.clockwise(self.speed),
-                                        "COUNTERCLOCKWISE":self.motor_bind.counterclockwise(self.speed)},
-                                 True, True) # start listening for commands sent by operating controller
 
-       def set_speed(self, speed: int) -> None: # command to set speed
-           """
-           Assigns parameter input to self.speed.
+    class TestBot(kinetic.Agent):
+        """
+        Test Bot: Generic as ever, comes in green and emerald colors.
+        """
 
-           :param speed: int, 0-255
-           :return: None
-           """
-           self.speed = abs(speed)
+        def __init__(self, uuid, uuid_is_path):
+            super().__init__(uuid, uuid_is_path)
+            self.serial = kinetic.Controllers.Serial()
+            self.motor_left = TestBot.MotorLeft(self)
+            self.motor_right = TestBot.MotorRight(self)
+            self.motor_bind = TestBot.MotorBind(self)
+            self.speed = 255
+            TestBot.network_init(self)
+            TestBot.client_listen(self, {"SETSPEED": TestBot.set_speed(self, int(self.network.receive())),
+                                         "FORWARD": self.motor_bind.forward(self.speed),
+                                         "BACKWARD": self.motor_bind.backward(self.speed),
+                                         "CLOCKWISE": self.motor_bind.clockwise(self.speed),
+                                         "COUNTERCLOCKWISE": self.motor_bind.counterclockwise(self.speed)}, True, True)
 
-       class MotorLeft(kinetic.Components.Kinetics.Motor): # example of a motor class using a kinetic component base
-           """
-           Left-side motor.
-           """
-           pwm = True
-           direction = True
-           def __init__(self, outer_self: object): # initialize base class, keymap path is an example
-               super().__init__(outer_self.serial,
-                                kinetic.Controllers.load_keymap("F://KINETIC//tests//motor_MotorLeft_keymap.json"))
-               TestBot.MotorLeft.pwm = self.is_pwm_enabled
-               TestBot.MotorLeft.direction = self.is_direction_enabled
+        def set_speed(self, speed: int) -> None:
+            """
+            Assigns parameter input to self.speed.
 
-       class MotorRight(kinetic.Components.Kinetics.Motor):
-           """
-           Right-side motor.
-           """
-           pwm = True
-           direction = True
-           def __init__(self, outer_self: object):
-               super().__init__(outer_self.serial, kinetic.Controllers.load_keymap("F://KINETIC//tests//motor_MotorRight_keymap.json"))
-               TestBot.MotorLeft.pwm = self.is_pwm_enabled
-               TestBot.MotorLeft.direction = self.is_direction_enabled
+            :param speed: int, 0-255
+            :return: None
+            """
+            self.speed = abs(speed)
 
-       class MotorBind(kinetic.ActionGroups.DualMotor):
-           """
-           Dual motor action group.
-           """
-           def __init__(self, outer_self: object):
-               super().__init__(outer_self.motor_left, outer_self.motor_right)
+        class MotorLeft(kinetic.Components.Kinetics.Motor):
+            """
+            Left-side motor.
+            """
+            pwm = True
+            direction = True
 
-   if __name__ == "__main__": # run example bot, with a placeholder UUID
-       bot = TestBot("6ae2f3bd-2b55-468a-88a3-af0eeae03896", False)
+            def __init__(self, outer_self: object):
+                super().__init__(outer_self.serial,
+                                 kinetic.Controllers.load_keymap("F://KINETIC//tests//motor_MotorLeft_keymap.json"))
+                TestBot.MotorLeft.pwm = self.is_pwm_enabled
+                TestBot.MotorLeft.direction = self.is_direction_enabled
+
+        class MotorRight(kinetic.Components.Kinetics.Motor):
+            """
+            Right-side motor.
+            """
+            pwm = True
+            direction = True
+
+            def __init__(self, outer_self: object):
+                super().__init__(outer_self.serial,
+                                 kinetic.Controllers.load_keymap("F://KINETIC//tests//motor_MotorRight_keymap.json"))
+                TestBot.MotorLeft.pwm = self.is_pwm_enabled
+                TestBot.MotorLeft.direction = self.is_direction_enabled
+
+        class MotorBind(kinetic.ActionGroups.DualMotor):
+            """
+            Dual motor action group.
+            """
+
+            def __init__(self, outer_self: object):
+                super().__init__(outer_self.motor_left, outer_self.motor_right)
+
+
+    if __name__ == "__main__":
+        bot = TestBot("6ae2f3bd-2b55-468a-88a3-af0eeae03896", False)
+
 
 Create custom components and controllers with the Generic classes.
 

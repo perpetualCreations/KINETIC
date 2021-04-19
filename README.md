@@ -16,5 +16,3 @@ pip3 install /path/to/wheel/file/here/project_kinetic-1.0-py3-none-any.whl
 pip3 install project-kinetic
 ```
 Please see documentation for more information.
-
-

@@ -19,7 +19,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="project-kinetic",
-    version="1.0.2",
+    version="1.0.3",
     author="perpetualCreations",
     author_email="tchen0584@gmail.com",
     description="Control modular and configurable robotic agents over the network.",

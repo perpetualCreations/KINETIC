@@ -800,7 +800,8 @@ class Agent:
             Agent.client_listen parameter lookup is None, can be directly overwritten, see unionize parameter for
             Agent.client_listen to use both self.lookup and parameter lookup, default lookup dictionary is
             {"STOP":Agent.stop(self, 0), "UPDATE":Agent.update(), "SHUTDOWN":Agent.shutdown(self),
-            "REBOOT":Agent.shutdown(self)}
+            "REBOOT":Agent.shutdown(self), "REQUEST TYPE": self.network.send("KINETIC"),
+            "REQUEST UUID": self.network.send(self.uuid)}
         """
         if uuid_is_path is True:
             with open(uuid) as uuid_handle:
@@ -864,7 +865,7 @@ class Agent:
         If command exists, replies with "OK" and if command does not exist in dictionary lookup, replies with
         "KEYERROR".
 
-        If dictionary key "HELP" does not exist in lookup, command is set to sends all valid commands as individual TXs,
+        If dictionary key "HELP" does not exist in lookup, command is set to send all valid commands as individual TXs,
         initiated with the length of the command list (counting from 1).
         For the controller to receive the command list, it should first receive the "OK" acknowledgement, and then the
         second TX containing length, and start a for loop lasting the length of command list.
