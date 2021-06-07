@@ -858,7 +858,7 @@ class Agent:
                 else:
                     self.network.restart()
 
-    def client_listen(self, lookup: Union[dict, None] = None, no_encrypt: bool = False, unionize: bool = False) -> None:
+    def client_listen(self, lookup: Union[dict, None] = None, no_encrypt: bool = False, unionize: bool = True) -> None:
         """
         Blocking function that listens for controller input over self.network, looks up input as key with lookup
         dictionary, executing associated function with input command.
@@ -878,7 +878,7 @@ class Agent:
         :param no_encrypt: bool, passed to network I/O functions send()/receive(), if True disables AES for network I/O
             operations in this function, otherwise if False AES encryption is enabled, default False
         :param unionize: bool, merge self.lookup and parameter lookup for usage as command dictionary if True, default
-            False
+            True, leave as True unless critically needed, be sure to respect ARIA specifications
         :return: None
         """
         if isinstance(self.network, swbs.Client) is not True:

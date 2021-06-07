@@ -1,4 +1,4 @@
-swbs
+swbs > 1.2
 pycryptodomex
 pyserial
 numpy
