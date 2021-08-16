@@ -1,4 +1,6 @@
 """
+Project KINETIC, setup script for package generation.
+
 ██╗  ██╗██╗███╗   ██╗███████╗████████╗██╗ ██████╗
 ██║ ██╔╝██║████╗  ██║██╔════╝╚══██╔══╝██║██╔════╝
 █████╔╝ ██║██╔██╗ ██║█████╗     ██║   ██║██║
@@ -6,10 +8,7 @@
 ██║  ██╗██║██║ ╚████║███████╗   ██║   ██║╚██████╗
 ╚═╝  ╚═╝╚═╝╚═╝  ╚═══╝╚══════╝   ╚═╝   ╚═╝ ╚═════╝
 
-Project KINETIC
 Made by perpetualCreations
-
-Setup script for generating package.
 """
 
 import setuptools
@@ -22,11 +21,14 @@ setuptools.setup(
     version="1.0.3",
     author="perpetualCreations",
     author_email="tchen0584@gmail.com",
-    description="Control modular and configurable robotic agents over the network.",
+    description="Control modular and configurable robotic agents over the"
+    " network.",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/perpetualCreations/swbs/",
-    install_requires=["swbs > 1.2", "pyserial", "numpy", "opencv-contrib-python", "imutils", "sense-hat", "gpiozero"],
+    install_requires=["swbs > 1.2", "pyserial", "numpy",
+                      "opencv-contrib-python", "imutils", "sense-hat",
+                      "gpiozero"],
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
