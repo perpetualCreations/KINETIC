@@ -18,14 +18,14 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="project-kinetic",
-    version="1.0.3",
+    version="1.1",
     author="perpetualCreations",
     author_email="tchen0584@gmail.com",
     description="Control modular and configurable robotic agents over the"
     " network.",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/perpetualCreations/swbs/",
+    url="https://github.com/perpetualCreations/kinetic/",
     install_requires=["swbs > 1.2", "pyserial", "numpy",
                       "opencv-contrib-python", "imutils", "sense-hat",
                       "gpiozero"],

@@ -115,12 +115,12 @@ Create custom components and controllers with the Generic classes.
 
    class CustomComponent(kinetic.Components.Generic):
        def __init__(self):
-           super.__init__()
+           super().__init__()
            # do this and that
 
    class CustomController(kinetic.Controllers.Generic)
        def __init__(self):
-           super.__init__()
+           super().__init__()
            # do this and that
 
 See API reference for more information for individual bases.
