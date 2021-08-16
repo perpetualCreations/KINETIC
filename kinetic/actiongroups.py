@@ -179,9 +179,9 @@ class QuadMotor:
 class MecanumQuadMotor(QuadMotor):
     """Extends QuadMotor drive train with mecanum-wheel strafing."""
 
-    def __init__(self):
+    def __init__(self, *args):
         """Class initialization."""
-        super().__init__()
+        super().__init__(*args)
 
     def left(self, speed: int = 1) -> None:
         """
