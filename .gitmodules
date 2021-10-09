@@ -1,0 +1,3 @@
+[submodule "kinetic-docs"]
+	path = docs
+	url = https://dreamerslegacy.xyz/git/perpetualCreations/kinetic-docs
