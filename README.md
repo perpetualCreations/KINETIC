@@ -1,10 +1,11 @@
+![project icon](project-icon.svg)
 # Project KINETIC
 [![forthebadge](https://forthebadge.com/images/badges/contains-technical-debt.svg)](https://forthebadge.com) [![forthebadge](https://forthebadge.com/images/badges/made-with-python.svg)](https://forthebadge.com)
 
-Control modular and configurable robotic agents over the network. 
+Control modular and configurable robotic agents over the network.
 
 ## Documentation
-To see documentation regarding installation and usage, please visit [https://dreamerslegacy.xyz/projects/kinetic/docs/index.html](https://dreamerslegacy.xyz/projects/kinetic/docs/index.html).
+To see documentation regarding installation and usage, please visit [this project's manual](https://dreamerslegacy.xyz/projects/kinetic/docs/index.html).
 
 ## Releases & Dist.
 With the released wheel file, after downloading:
