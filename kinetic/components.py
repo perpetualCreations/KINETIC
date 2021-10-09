@@ -1,6 +1,6 @@
 """Module for hardware abstraction types."""
 
-from typing import Union, Tuple
+from typing import Union, Tuple, Literal
 from time import sleep
 import cv2
 import swbs
@@ -474,6 +474,246 @@ class Interfaces:
             :param sense: object, SenseHAT controller instance
             """
             self.sense = sense.sense
+
+        def led_set_rotation(self, state: Literal[0, 90, 180, 270]) -> None:
+            """
+            Rotates LED image by given state representing number of degrees.
+
+            :param state: degrees to rotate the image by
+            :type state: Literal[0, 90, 180, 270]
+            """
+            self.sense.set_rotation(state)
+
+        def flip_horizontal(self) -> None:
+            """Reflect LED image horizontally."""
+            self.sense.flip_h()
+
+        def flip_vertical(self) -> None:
+            """Reflect LED image vertically."""
+            self.sense.flip_v()
+
+        # i am so sorry
+        def set_pixels(self, image:
+                       Tuple[Tuple[int, int, int], Tuple[int, int, int],
+                             Tuple[int, int, int], Tuple[int, int, int],
+                             Tuple[int, int, int], Tuple[int, int, int],
+                             Tuple[int, int, int], Tuple[int, int, int],
+                             Tuple[int, int, int], Tuple[int, int, int],
+                             Tuple[int, int, int], Tuple[int, int, int],
+                             Tuple[int, int, int], Tuple[int, int, int],
+                             Tuple[int, int, int], Tuple[int, int, int],
+                             Tuple[int, int, int], Tuple[int, int, int],
+                             Tuple[int, int, int], Tuple[int, int, int],
+                             Tuple[int, int, int], Tuple[int, int, int],
+                             Tuple[int, int, int], Tuple[int, int, int],
+                             Tuple[int, int, int], Tuple[int, int, int],
+                             Tuple[int, int, int], Tuple[int, int, int],
+                             Tuple[int, int, int], Tuple[int, int, int],
+                             Tuple[int, int, int], Tuple[int, int, int],
+                             Tuple[int, int, int], Tuple[int, int, int],
+                             Tuple[int, int, int], Tuple[int, int, int],
+                             Tuple[int, int, int], Tuple[int, int, int],
+                             Tuple[int, int, int], Tuple[int, int, int],
+                             Tuple[int, int, int], Tuple[int, int, int],
+                             Tuple[int, int, int], Tuple[int, int, int],
+                             Tuple[int, int, int], Tuple[int, int, int],
+                             Tuple[int, int, int], Tuple[int, int, int],
+                             Tuple[int, int, int], Tuple[int, int, int],
+                             Tuple[int, int, int], Tuple[int, int, int],
+                             Tuple[int, int, int], Tuple[int, int, int],
+                             Tuple[int, int, int], Tuple[int, int, int],
+                             Tuple[int, int, int], Tuple[int, int, int],
+                             Tuple[int, int, int], Tuple[int, int, int],
+                             Tuple[int, int, int], Tuple[int, int, int],
+                             Tuple[int, int, int], Tuple[int, int, int]]) -> \
+                None:
+            """
+            Set LED image using a tuple, with 64 elements, being tuples that \
+                represent the RGB value (0-255, 0-255, 0-255) of each pixel, \
+                    the LED being set relative to its corresponding RGB \
+                        value's position in the image tuple.
+
+            :param image: tuple representing image to be rendered on LED matrix
+            :type image: Tuple[Tuple[int, int, int], Tuple[int, int, int],
+                Tuple[int, int, int], Tuple[int, int, int],
+                Tuple[int, int, int], Tuple[int, int, int],
+                Tuple[int, int, int], Tuple[int, int, int],
+                Tuple[int, int, int], Tuple[int, int, int],
+                Tuple[int, int, int], Tuple[int, int, int],
+                Tuple[int, int, int], Tuple[int, int, int],
+                Tuple[int, int, int], Tuple[int, int, int],
+                Tuple[int, int, int], Tuple[int, int, int],
+                Tuple[int, int, int], Tuple[int, int, int],
+                Tuple[int, int, int], Tuple[int, int, int],
+                Tuple[int, int, int], Tuple[int, int, int],
+                Tuple[int, int, int], Tuple[int, int, int],
+                Tuple[int, int, int], Tuple[int, int, int],
+                Tuple[int, int, int], Tuple[int, int, int],
+                Tuple[int, int, int], Tuple[int, int, int],
+                Tuple[int, int, int], Tuple[int, int, int],
+                Tuple[int, int, int], Tuple[int, int, int],
+                Tuple[int, int, int], Tuple[int, int, int],
+                Tuple[int, int, int], Tuple[int, int, int],
+                Tuple[int, int, int], Tuple[int, int, int],
+                Tuple[int, int, int], Tuple[int, int, int],
+                Tuple[int, int, int], Tuple[int, int, int],
+                Tuple[int, int, int], Tuple[int, int, int],
+                Tuple[int, int, int], Tuple[int, int, int],
+                Tuple[int, int, int], Tuple[int, int, int],
+                Tuple[int, int, int], Tuple[int, int, int],
+                Tuple[int, int, int], Tuple[int, int, int],
+                Tuple[int, int, int], Tuple[int, int, int],
+                Tuple[int, int, int], Tuple[int, int, int],
+                Tuple[int, int, int], Tuple[int, int, int],
+                Tuple[int, int, int], Tuple[int, int, int]]
+            """
+            self.sense.set_pixels(list(map(list, image)))  # type: ignore
+
+        def get_pixels(self) -> \
+                Tuple[Tuple[int, int, int], Tuple[int, int, int],
+                      Tuple[int, int, int], Tuple[int, int, int],
+                      Tuple[int, int, int], Tuple[int, int, int],
+                      Tuple[int, int, int], Tuple[int, int, int],
+                      Tuple[int, int, int], Tuple[int, int, int],
+                      Tuple[int, int, int], Tuple[int, int, int],
+                      Tuple[int, int, int], Tuple[int, int, int],
+                      Tuple[int, int, int], Tuple[int, int, int],
+                      Tuple[int, int, int], Tuple[int, int, int],
+                      Tuple[int, int, int], Tuple[int, int, int],
+                      Tuple[int, int, int], Tuple[int, int, int],
+                      Tuple[int, int, int], Tuple[int, int, int],
+                      Tuple[int, int, int], Tuple[int, int, int],
+                      Tuple[int, int, int], Tuple[int, int, int],
+                      Tuple[int, int, int], Tuple[int, int, int],
+                      Tuple[int, int, int], Tuple[int, int, int],
+                      Tuple[int, int, int], Tuple[int, int, int],
+                      Tuple[int, int, int], Tuple[int, int, int],
+                      Tuple[int, int, int], Tuple[int, int, int],
+                      Tuple[int, int, int], Tuple[int, int, int],
+                      Tuple[int, int, int], Tuple[int, int, int],
+                      Tuple[int, int, int], Tuple[int, int, int],
+                      Tuple[int, int, int], Tuple[int, int, int],
+                      Tuple[int, int, int], Tuple[int, int, int],
+                      Tuple[int, int, int], Tuple[int, int, int],
+                      Tuple[int, int, int], Tuple[int, int, int],
+                      Tuple[int, int, int], Tuple[int, int, int],
+                      Tuple[int, int, int], Tuple[int, int, int],
+                      Tuple[int, int, int], Tuple[int, int, int],
+                      Tuple[int, int, int], Tuple[int, int, int],
+                      Tuple[int, int, int], Tuple[int, int, int],
+                      Tuple[int, int, int], Tuple[int, int, int]]:
+            """
+            Return LED image represented as a tuple, with 64 elements, being \
+                tuples that represent the RGB value (0-255, 0-255, 0-255) of \
+                    each pixel, the LED being represented relative to its \
+                        corresponding RGB value's position in the image tuple.
+
+            :return: tuple representing image rendered on LED matrix
+            :rtype: Tuple[Tuple[int, int, int], Tuple[int, int, int],
+                Tuple[int, int, int], Tuple[int, int, int],
+                Tuple[int, int, int], Tuple[int, int, int],
+                Tuple[int, int, int], Tuple[int, int, int],
+                Tuple[int, int, int], Tuple[int, int, int],
+                Tuple[int, int, int], Tuple[int, int, int],
+                Tuple[int, int, int], Tuple[int, int, int],
+                Tuple[int, int, int], Tuple[int, int, int],
+                Tuple[int, int, int], Tuple[int, int, int],
+                Tuple[int, int, int], Tuple[int, int, int],
+                Tuple[int, int, int], Tuple[int, int, int],
+                Tuple[int, int, int], Tuple[int, int, int],
+                Tuple[int, int, int], Tuple[int, int, int],
+                Tuple[int, int, int], Tuple[int, int, int],
+                Tuple[int, int, int], Tuple[int, int, int],
+                Tuple[int, int, int], Tuple[int, int, int],
+                Tuple[int, int, int], Tuple[int, int, int],
+                Tuple[int, int, int], Tuple[int, int, int],
+                Tuple[int, int, int], Tuple[int, int, int],
+                Tuple[int, int, int], Tuple[int, int, int],
+                Tuple[int, int, int], Tuple[int, int, int],
+                Tuple[int, int, int], Tuple[int, int, int],
+                Tuple[int, int, int], Tuple[int, int, int],
+                Tuple[int, int, int], Tuple[int, int, int],
+                Tuple[int, int, int], Tuple[int, int, int],
+                Tuple[int, int, int], Tuple[int, int, int],
+                Tuple[int, int, int], Tuple[int, int, int],
+                Tuple[int, int, int], Tuple[int, int, int],
+                Tuple[int, int, int], Tuple[int, int, int],
+                Tuple[int, int, int], Tuple[int, int, int],
+                Tuple[int, int, int], Tuple[int, int, int],
+                Tuple[int, int, int], Tuple[int, int, int]]
+            """
+            return tuple(map(tuple, self.sense.get_pixels()))  # type: ignore
+
+        def set_pixel(self, x: int, y: int, rgb: Tuple[int, int, int]) -> None:
+            """
+            Set a pixel on the LED matrix.
+
+            :param x: x coordinate of the pixel, 0-7
+            :type x: int
+            :param y: y coordinate of the pixel, 0-7
+            :type y: int
+            :param rgb: RGB value of the pixel, (0-255, 0-255, 0-255)
+            :type rgb: Tuple[int, int, int]
+            """
+            self.sense.set_pixel(x, y, rgb)
+
+        def get_pixel(self, x: int, y: int) -> Tuple[int, int, int]:
+            """
+            Get a pixel from the LED matrix.
+
+            :param x: x coordinate of the pixel, 0-7
+            :type x: int
+            :param y: y coordinate of the pixel, 0-7
+            :type y: int
+            :return: RGB value of the pixel, (0-255, 0-255, 0-255)
+            :rtype: Tuple[int, int, int]
+            """
+            return self.sense.get_pixel(x, y)
+
+        def load_image(self, path: str) -> None:
+            """
+            Set LED image using an image file.
+
+            File specified with path must be 8x8 pixels in size. The Portable \
+                Network Graphics (.png) file format should be a support file \
+                    type. Other file formats may also work, however are \
+                        untested.
+
+            :param path: path to image file
+            :type path: str
+            """
+            self.sense.load_image(path)
+
+        def clear(self, rgb: Tuple[int, int, int] = (0, 0, 0)) -> None:
+            """
+            Clear LED image or specify an RGB value with a tuple to overwrite \
+                the LED matrix with a single color.
+
+            :param rgb: color to fill LED matrix with, default (0, 0, 0)
+            :type rgb: Tuple[int, int, int]
+            """
+            self.sense.clear(rgb)
+
+        def show_message(self, text: str, speed: float = 0.1,
+                         foreground: Tuple[int, int, int] = (255, 255, 255),
+                         background: Tuple[int, int, int] = (0, 0, 0)) -> None:
+            """
+            Scroll text across the LED matrix.
+
+            :param text: text to displayed
+            :type text: str
+            :param foreground: RGB value for the color of foreground text,
+                defaults to (255, 255, 255)
+            :type foreground: Tuple[int, int, int]
+            :param background: RGB value for the color of background, defaults
+                to (0, 0, 0)
+            :type background: Tuple[int, int, int]
+            :param speed: speed at which text scrolls, represented by the
+                amount of time spent paused before advancing text characters
+                one column to the left, defaults to 0.1
+            :type speed: float
+            """
+            self.sense.show_message(text, speed, foreground, background)
 
 
 class Power:
